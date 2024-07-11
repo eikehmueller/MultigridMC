@@ -172,8 +172,10 @@ public:
     double omega;
     /** @brief cycle type (1 = V-cycle, 2 = W-cycle)*/
     unsigned int cycle;
-    /** @briaf factor with which to scale to coarse grid correction */
+    /** @brief factor with which to scale to coarse grid correction */
     double coarse_scaling;
+    /** @brief multigrid variant, can be "exact" or "fas" */
+    std::string variant;
     /** @brief verbosity level */
     int verbose;
 };

@@ -8,6 +8,7 @@
 #include "intergrid/intergrid_operator_linear.hh"
 #include "auxilliary/parallel_random.hh"
 #include "auxilliary/parameters.hh"
+#include "solver/cholesky_solver.hh"
 #include "sampler.hh"
 #include "sor_sampler.hh"
 #include "ssor_sampler.hh"
@@ -65,6 +66,21 @@ protected:
      * @param[in] level level on which to solve recursively
      */
     void sample(const unsigned int level) const;
+
+    /** @brief Compute logarithm of probability density, ignoring normalisation
+     *
+     * the density is pi(x) = N*exp[-1/2*x^T.A.x + f^T.x], this method computes
+     *
+     *    -1/2*(x-mu)^T.A.(x-mu)
+     *
+     * where A.mu = f
+     * @param[in] linear_operator linear operator A
+     * @param[in] f_rhs right hand side vector f
+     * @param[in] x current state x
+     */
+    double log_probability(const std::shared_ptr<LinearOperator> linear_operator,
+                           const Eigen::VectorXd &f_rhs,
+                           const Eigen::VectorXd &x) const;
 
     /** @brief parameters */
     const MultigridParameters params;

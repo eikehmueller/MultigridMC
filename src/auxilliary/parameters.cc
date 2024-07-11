@@ -145,10 +145,19 @@ void MultigridParameters::parse_config(const libconfig::Setting &root)
     coarse_solver = multigrid.lookup("coarse_solver").c_str();
     if (not((coarse_solver == "SSOR") or (coarse_solver == "Cholesky")))
     {
-        std::cout << "ERROR: invalid multigrid coarse solver : \'" << smoother << "\'" << std::endl;
+        std::cout << "ERROR: invalid multigrid coarse solver : \'" << coarse_solver << "\'" << std::endl;
         std::cout << "       must be SSOR or Cholesky" << std::endl;
         exit(-1);
     }
+
+    variant = multigrid.lookup("variant").c_str();
+    if (not((variant == "exact") or (variant == "fas")))
+    {
+        std::cout << "ERROR: invalid multigrid variant : \'" << variant << "\'" << std::endl;
+        std::cout << "       must be exact or fas" << std::endl;
+        exit(-1);
+    }
+
     npresmooth = multigrid.lookup("npresmooth");
     npostsmooth = multigrid.lookup("npostsmooth");
     ncoarsesmooth = multigrid.lookup("ncoarsesmooth");
@@ -166,6 +175,7 @@ void MultigridParameters::parse_config(const libconfig::Setting &root)
     omega = multigrid.lookup("omega");
     verbose = multigrid.lookup("verbose");
     std::cout << "  multigrid" << std::endl;
+    std::cout << "    variant = " << variant << std::endl;
     std::cout << "    levels = " << nlevel << std::endl;
     std::cout << "    npresmooth = " << npresmooth << std::endl;
     std::cout << "    npostsmooth = " << npostsmooth << std::endl;

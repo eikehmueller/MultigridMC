@@ -19,7 +19,7 @@ MultigridMCSampler::MultigridMCSampler(std::shared_ptr<LinearOperator> linear_op
 #pragma omp master
     if (params.verbose > 0)
     {
-        std::cout << "Setting up Multilevel MC sampler " << std::endl;
+        std::cout << "Setting up Multigrid MC sampler " << std::endl;
     }
 
     std::shared_ptr<SamplerFactory> presampler_factory;
@@ -120,15 +120,58 @@ void MultigridMCSampler::sample(const unsigned int level) const
         {
             // Presampler
             presamplers[level]->apply(f_ell[level], x_ell[level]);
-            // Compute residual
-            linear_operators[level]->apply(x_ell[level], r_ell[level]);
-            r_ell[level] = f_ell[level] - r_ell[level];
-            intergrid_operators[level]->restrict(r_ell[level], f_ell[level + 1]);
             // Recursive call
-            x_ell[level + 1].setZero();
-            sample(level + 1);
-            // Prolongate and add
-            intergrid_operators[level]->prolongate_add(params.coarse_scaling, x_ell[level + 1], x_ell[level]);
+            if (params.variant == "exact")
+            {
+                // Compute residual
+                linear_operators[level]->apply(x_ell[level], r_ell[level]);
+                r_ell[level] = f_ell[level] - r_ell[level];
+                intergrid_operators[level]->restrict(r_ell[level], f_ell[level + 1]);
+                x_ell[level + 1].setZero();
+                sample(level + 1);
+                // Prolongate and add
+                intergrid_operators[level]->prolongate_add(params.coarse_scaling, x_ell[level + 1], x_ell[level]);
+            }
+            else if (params.variant == "fas")
+            {
+                unsigned int n = x_ell[level].size();
+                unsigned int n_coarse = x_ell[level + 1].size();
+                // TODO: construct vectors once in constructor
+                Eigen::VectorXd x_old(n);
+                Eigen::VectorXd x_tilde(n);
+                Eigen::VectorXd x_old_coarse(n_coarse);
+                // Copy old solution
+                x_old = x_ell[level];
+                intergrid_operators[level]->restrict(f_ell[level], f_ell[level + 1]);
+                sample(level + 1);
+                // Construct vector
+                //   tilde(x)_ell = x_ell^{old}
+                //                + I_{2h}^h ( x_{ell+1} - tilde(I)_{h}^{2h} x_ell^{old} )
+                x_tilde = x_old;
+                intergrid_operators[level]->interpolate(x_old, x_old_coarse);
+                intergrid_operators[level]->prolongate_add(1.0, x_ell[level + 1], x_tilde);
+                intergrid_operators[level]->prolongate_add(-1.0, x_old_coarse, x_tilde);
+                // Construct vector
+                //   x_{ell+1}^{old} = 2*tilde(I)_{h}^{2h} x_ell^{old} - x_{ell+1}
+                x_old_coarse = 2 * x_old_coarse - x_ell[level + 1];
+                // Acceptance ratio alpha
+                double log_p = 0;
+                log_p += log_probability(linear_operators[level], f_ell[level], x_tilde);
+                log_p -= log_probability(linear_operators[level], f_ell[level], x_old);
+                log_p += log_probability(linear_operators[level + 1], f_ell[level + 1], x_old_coarse);
+                log_p -= log_probability(linear_operators[level + 1], f_ell[level + 1], x_ell[level + 1]);
+                double alpha = exp(log_p);
+                double accept = (alpha >= 1.0);
+                if (not accept)
+                    accept = (rng->draw_uniform_real() < alpha);
+                if (accept)
+                    x_ell[level] = x_tilde;
+            }
+            else
+            {
+                std::cout << "Invalid multigrid variant " << params.variant << std::endl;
+                exit(-1);
+            }
             // Postsmooth
             postsamplers[level]->apply(f_ell[level], x_ell[level]);
         }
@@ -142,4 +185,20 @@ void MultigridMCSampler::apply(const Eigen::VectorXd &f, Eigen::VectorXd &x) con
     x_ell[0] = x;
     sample(0);
     x = x_ell[0];
+}
+
+/** Compute the logarithm of the probability density, ignoring normalisation */
+double MultigridMCSampler::log_probability(const std::shared_ptr<LinearOperator> linear_operator,
+                                           const Eigen::VectorXd &f_rhs,
+                                           const Eigen::VectorXd &x) const
+{
+    // TODO: construct mu on each level once in the constructor
+    CholeskySolver solver(linear_operator);
+    unsigned int n = x.size();
+    Eigen::VectorXd mu(n);
+    Eigen::VectorXd A_x_mu(n);
+    solver.apply(f_rhs, mu);
+    mu -= x;
+    linear_operator->apply(mu, A_x_mu);
+    return -0.5 * A_x_mu.dot(mu);
 }
