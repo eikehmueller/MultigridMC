@@ -170,6 +170,31 @@ TEST_F(IntergridTest, TestProlongRestrict2dLinear)
     EXPECT_NEAR(X_coarse.dot(r_restr) - X_prol.dot(r_fine), 0.0, tolerance);
 }
 
+/** @brief check that interpolation is inverse of prolongation.
+ *
+ * For the linear intergrid operator check that the interpolated field
+ *
+ *    tilde(I)_{h}^{2h} u = u^{c}
+ *
+ * where u = I_{2n}^{h} u^{c} is obtained from u^{c} by prolongation.
+ *
+ */
+TEST_F(IntergridTest, TestInterpolation2dLinear)
+{
+    // coarse level state
+    Eigen::VectorXd X_coarse = get_state(coarse_lattice_2d, true);
+    // prolongated state
+    Eigen::VectorXd X_prol = get_state(lattice_2d, false);
+    // fine level residual
+    Eigen::VectorXd X_interp = get_state(coarse_lattice_2d, false);
+    // Prolongate state
+    intergrid_operator_2dlinear->prolongate_add(1.0, X_coarse, X_prol);
+    // Restrict residual
+    intergrid_operator_2dlinear->interpolate(X_prol, X_interp);
+    double tolerance = 1.E-12;
+    EXPECT_NEAR((X_coarse - X_interp).norm(), 0.0, tolerance);
+}
+
 /** @brief check that coarsening the operator works in 2d
  *
  * Coarsening the shifted Laplace operator with constant coefficients should
