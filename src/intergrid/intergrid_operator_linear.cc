@@ -6,9 +6,11 @@
 
 /** @brief Create a new instance */
 IntergridOperatorLinear::IntergridOperatorLinear(const std::shared_ptr<Lattice> lattice_) : Base(lattice_,
-                                                                                                 int(pow(3, lattice_->dim())))
+                                                                                                 int(pow(3, lattice_->dim())),
+                                                                                                 1)
 {
     int dim = lattice->dim();
+    Eigen::VectorXi s(dim);
     // 1d stencil and shift vector
     const double stencil1d[3] = {0.5, 1.0, 0.5};
     const int shift1d[3] = {-1, 0, +1};
@@ -17,7 +19,6 @@ IntergridOperatorLinear::IntergridOperatorLinear(const std::shared_ptr<Lattice> 
     for (int j = 0; j < stencil_size; ++j)
     {
         matrix[j] = 1.0;
-        Eigen::VectorXi s(dim);
         int mu = j;
         for (int d = 0; d < dim; ++d)
         {
@@ -27,5 +28,13 @@ IntergridOperatorLinear::IntergridOperatorLinear(const std::shared_ptr<Lattice> 
         }
         shift.push_back(s);
     }
-    compute_colidx(shift);
+    compute_colidx(shift, stencil_size, colidx);
+
+    // matrix entries and shifts
+    interpolation_matrix[0] = 1.0;
+    std::vector<Eigen::VectorXi> interpolation_shift;
+    for (int d = 0; d < dim; ++d)
+        s[d] = 0;
+    interpolation_shift.push_back(s);
+    compute_colidx(interpolation_shift, 1, interpolation_colidx);
 }

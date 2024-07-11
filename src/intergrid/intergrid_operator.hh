@@ -34,6 +34,10 @@
  *
  *       A^{c} = I_{h}^{2h} A I_{2h}^{h}
  *
+ *  - Interpolate a vector to the next-coarser level
+ *
+ *      x^{c} = tilde{I}_{h}^{2h} x
+ *
  * It is assumed that I_{h}^{2h} = (I_{2h}^{h})^T.
  * The sparsity structure of the intergrid operator is assumed to be fixed and is described
  * by a stencil; the entries of the matrices I_{h}^{2h} and I_{2h}^{h} are also assumed to
@@ -49,13 +53,18 @@ public:
      *
      * @param[in] lattice_ underlying lattice
      * @param[in] stencil_size_ size of intergrid stencil
+     * @param[in] interpolation_stencil_size_ size of interpolation stencil
      */
     IntergridOperator(const std::shared_ptr<Lattice> lattice_,
-                      const int stencil_size_) : lattice(lattice_),
-                                                 stencil_size(stencil_size_)
+                      const int stencil_size_,
+                      const int interpolation_stencil_size_) : lattice(lattice_),
+                                                               stencil_size(stencil_size_),
+                                                               interpolation_stencil_size(interpolation_stencil_size_)
     {
         matrix = new double[stencil_size];
+        interpolation_matrix = new double[interpolation_stencil_size];
         colidx = new unsigned int[lattice->get_coarse_lattice()->Nvertex * stencil_size];
+        interpolation_colidx = new unsigned int[lattice->get_coarse_lattice()->Nvertex * interpolation_stencil_size];
     }
 
     ~IntergridOperator()
@@ -119,6 +128,29 @@ public:
         }
     };
 
+    /** @brief Interpolate a vector to the next-coarser level
+     *
+     * Compute x^{c} = tilde{I}_{h}^{2h} x
+     *
+     * @param[in] x input vector on current lattice
+     * @param[out] x^{c} output vector on next-coarser lattice
+     */
+    virtual void interpolate(const Eigen::VectorXd &x, Eigen::VectorXd &x_coarse)
+    {
+        std::shared_ptr<Lattice> coarse_lattice = lattice->get_coarse_lattice();
+
+        for (unsigned int ell_coarse = 0; ell_coarse < coarse_lattice->Nvertex; ++ell_coarse)
+        {
+            double result = 0;
+            for (unsigned k = 0; k < interpolation_stencil_size; ++k)
+            {
+                unsigned int ell = interpolation_colidx[ell_coarse * interpolation_stencil_size + k];
+                result += interpolation_matrix[k] * x[ell];
+            }
+            x_coarse[ell_coarse] = result;
+        }
+    }
+
     /** @brief convert restriction operator to a sparse matrix */
     const Eigen::SparseMatrix<double> to_sparse() const
     {
@@ -147,17 +179,27 @@ protected:
     /** @brief Compute column indices on entire lattice
      *
      * @param[in] shift vector with shift indices
+     * @param[in] stencil_size_ size of stencil
+     * @param[out] colidx_ptr array with column indices to set
      */
-    void compute_colidx(const std::vector<Eigen::VectorXi> shift);
+    void compute_colidx(const std::vector<Eigen::VectorXi> shift,
+                        const int stencil_size_,
+                        unsigned int *colidx_ptr);
 
     /** @brief underlying lattice */
     const std::shared_ptr<Lattice> lattice;
     /** @brief size of stencil */
     const int stencil_size;
+    /** @brief size of stencil for interpolation matrix */
+    const int interpolation_stencil_size;
     /** @brief underlying matrix */
     double *matrix;
+    /** @brief underlying interpolation matrix */
+    double *interpolation_matrix;
     /** @brief indirection map */
     unsigned int *colidx;
+    /** @brief indirection map */
+    unsigned int *interpolation_colidx;
 };
 
 /* ******************** factory classes ****************************** */
