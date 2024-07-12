@@ -11,7 +11,6 @@ MultigridMCSampler::MultigridMCSampler(std::shared_ptr<LinearOperator> linear_op
                                        const CholeskyParameters cholesky_params_) : Sampler(linear_operator_, rng_),
                                                                                     params(params_),
                                                                                     cholesky_params(cholesky_params_),
-                                                                                    rhs_is_fixed(false),
                                                                                     acceptance_probability(params_.nlevel, 0.0),
                                                                                     n_accept_reject(params_.nlevel, 0)
 {
@@ -91,7 +90,6 @@ MultigridMCSampler::MultigridMCSampler(std::shared_ptr<LinearOperator> linear_op
         x_ell.push_back(Eigen::VectorXd(lattice->Nvertex));
         f_ell.push_back(Eigen::VectorXd(lattice->Nvertex));
         r_ell.push_back(Eigen::VectorXd(lattice->Nvertex));
-        mu_ell.push_back(Eigen::VectorXd(lattice->Nvertex));
         linear_operators.push_back(lin_op);
         std::shared_ptr<Sampler> presampler = presampler_factory->get(lin_op);
         presamplers.push_back(presampler);
@@ -146,8 +144,9 @@ void MultigridMCSampler::sample(const unsigned int level) const
                 Eigen::VectorXd x_old_coarse(n_coarse);
                 // Copy old solution
                 x_old = x_ell[level];
+                intergrid_operators[level]->restrict(f_ell[level], f_ell[level + 1]);
                 sample(level + 1);
-                // Construct vector
+                // Construct proposal vector
                 //   tilde(x)_ell = x_ell^{old}
                 //                + I_{2h}^h ( x_{ell+1} - tilde(I)_{h}^{2h} x_ell^{old} )
                 x_tilde = x_old;
@@ -184,23 +183,9 @@ void MultigridMCSampler::sample(const unsigned int level) const
 void MultigridMCSampler::apply(const Eigen::VectorXd &f, Eigen::VectorXd &x) const
 {
     x_ell[0] = x;
-    if ((params.variant == "fas") and (not rhs_is_fixed))
-    {
-        set_rhs(f);
-    }
-    else
-    {
-        f_ell[0] = f;
-    }
+    f_ell[0] = f;
     sample(0);
     x = x_ell[0];
-}
-
-/** Fix the RHS */
-void MultigridMCSampler::fix_rhs(const Eigen::VectorXd &f)
-{
-    rhs_is_fixed = true;
-    set_rhs(f);
 }
 
 /** print out acceptance probabilities on all levels of the hierarchy */
@@ -218,27 +203,12 @@ void MultigridMCSampler::show_acceptance_probabilities() const
     }
 }
 
-/** Set the RHS for all levels of the hierarchy and compute the corresponding means */
-void MultigridMCSampler::set_rhs(const Eigen::VectorXd &f) const
-{
-    f_ell[0] = f;
-    for (int level = 0; level < params.nlevel; ++level)
-    {
-        CholeskySolver solver(linear_operators[level]);
-        solver.apply(f_ell[level], mu_ell[level]);
-        if (level < params.nlevel - 1)
-            intergrid_operators[level]->restrict(f_ell[level], f_ell[level + 1]);
-    }
-}
-
 /** Compute the logarithm of the probability density, ignoring normalisation */
 double MultigridMCSampler::log_probability(const unsigned int level,
                                            const Eigen::VectorXd &x) const
 {
     unsigned int n = x.size();
-    Eigen::VectorXd x_mu(n);
-    Eigen::VectorXd A_x_mu(n);
-    x_mu = x - mu_ell[level];
-    linear_operators[level]->apply(x_mu, A_x_mu);
-    return -0.5 * A_x_mu.dot(x_mu);
+    Eigen::VectorXd A_x(n);
+    linear_operators[level]->apply(x, A_x);
+    return -0.5 * A_x.dot(x) + f_ell[level].dot(x);
 }

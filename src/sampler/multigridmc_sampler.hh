@@ -60,27 +60,6 @@ public:
      */
     virtual void apply(const Eigen::VectorXd &f, Eigen::VectorXd &x) const;
 
-    /** @brief fix the right hand side vector g from a given f
-     *
-     * Compute g from given RHS  by solving U^T g = f
-     * once. This will then avoid the repeated solution of this triangular
-     * system whenever apply() is called.
-     *
-     * @param[in] f right hand side f that appears in the exponent of the
-     *            probability density.
-     */
-    virtual void fix_rhs(const Eigen::VectorXd &f);
-
-    /** @brief unfix the right hand side vector g
-     *
-     * Set the pointer to zero, which will force the solve for g in every
-     * call to the apply() method.
-     */
-    virtual void unfix_rhs()
-    {
-        rhs_is_fixed = false;
-    }
-
     /** @brief print out acceptance probabilities on all levels of the hierarchy */
     void show_acceptance_probabilities() const;
 
@@ -90,16 +69,6 @@ protected:
      * @param[in] level level on which to solve recursively
      */
     void sample(const unsigned int level) const;
-
-    /** @brief Set the RHS and mean on all levels of the hierarchy
-     *
-     * Compute f_{2h} = I_{h}^{2h} f_h and mu_{2h} = A_{2h}^{-1} f_{2h} recursively
-     * on all levels of the multigrid hierarchy.
-     *
-     * @param[in] f right hand side f that appears in the exponent of the
-     *            probability density.
-     */
-    void set_rhs(const Eigen::VectorXd &f) const;
 
     /** @brief Compute logarithm of probability density, ignoring normalisation
      *
@@ -134,10 +103,6 @@ protected:
     mutable std::vector<Eigen::VectorXd> f_ell;
     /** @brief Residual on each level */
     mutable std::vector<Eigen::VectorXd> r_ell;
-    /** @brief Mean on each level */
-    mutable std::vector<Eigen::VectorXd> mu_ell;
-    /** @brief has the RHS f been fixed? */
-    mutable bool rhs_is_fixed;
     /** @brief rejection probability on each level */
     mutable std::vector<double> acceptance_probability;
     /** @brief number of accept/reject steps on each level */
