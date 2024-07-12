@@ -238,6 +238,7 @@ TEST_P(SamplerTest, TestMultigridMCSampler1d)
 {
     bool lowrank_correction = GetParam();
     MultigridParameters multigrid_params;
+    multigrid_params.variant = "exact";
     multigrid_params.nlevel = 3;
     multigrid_params.smoother = "SSOR";
     multigrid_params.coarse_solver = "Cholesky";
@@ -309,6 +310,7 @@ TEST_F(SamplerTest, TestMultigridMCSampler2d)
                                                                                            measurement_params);
 
     MultigridParameters multigrid_params;
+    multigrid_params.variant = "exact";
     multigrid_params.nlevel = 3;
     multigrid_params.smoother = "SSOR";
     multigrid_params.coarse_solver = "Cholesky";
