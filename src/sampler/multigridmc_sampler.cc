@@ -146,7 +146,6 @@ void MultigridMCSampler::sample(const unsigned int level) const
                 Eigen::VectorXd x_old_coarse(n_coarse);
                 // Copy old solution
                 x_old = x_ell[level];
-                intergrid_operators[level]->restrict(f_ell[level], f_ell[level + 1]);
                 sample(level + 1);
                 // Construct vector
                 //   tilde(x)_ell = x_ell^{old}
