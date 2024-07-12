@@ -11,7 +11,9 @@ MultigridMCSampler::MultigridMCSampler(std::shared_ptr<LinearOperator> linear_op
                                        const CholeskyParameters cholesky_params_) : Sampler(linear_operator_, rng_),
                                                                                     params(params_),
                                                                                     cholesky_params(cholesky_params_),
-                                                                                    rhs_is_fixed(false)
+                                                                                    rhs_is_fixed(false),
+                                                                                    acceptance_probability(params_.nlevel, 0.0),
+                                                                                    n_accept_reject(params_.nlevel, 0)
 {
     // Extract underlying fine lattice
     std::shared_ptr<Lattice> lattice = linear_operator->get_lattice();
@@ -165,6 +167,8 @@ void MultigridMCSampler::sample(const unsigned int level) const
                     accept = (rng->draw_uniform_real() < alpha);
                 if (accept)
                     x_ell[level] = x_tilde;
+                n_accept_reject[level]++;
+                acceptance_probability[level] += (accept - acceptance_probability[level]) / n_accept_reject[level];
             }
             else
             {
@@ -198,6 +202,21 @@ void MultigridMCSampler::fix_rhs(const Eigen::VectorXd &f)
 {
     rhs_is_fixed = true;
     set_rhs(f);
+}
+
+/** print out acceptance probabilities on all levels of the hierarchy */
+void MultigridMCSampler::show_acceptance_probabilities() const
+{
+    if (params.variant == "fas")
+    {
+        std::cout << "MultigridMC acceptance probabilities" << std::endl;
+        for (int level = 0; level < params.nlevel - 1; ++level)
+        {
+            double p_accept = 100 * acceptance_probability[level];
+            double p_reject = 100 - p_accept;
+            printf("     level %2d : p_accept = %5.2f %% p_reject = %5.2f %% \n", level, p_accept, p_reject);
+        }
+    }
 }
 
 /** Set the RHS for all levels of the hierarchy and compute the corresponding means */

@@ -81,6 +81,9 @@ public:
         rhs_is_fixed = false;
     }
 
+    /** @brief print out acceptance probabilities on all levels of the hierarchy */
+    void show_acceptance_probabilities() const;
+
 protected:
     /** @brief Recursive solve on a givel level
      *
@@ -135,6 +138,10 @@ protected:
     mutable std::vector<Eigen::VectorXd> mu_ell;
     /** @brief has the RHS f been fixed? */
     mutable bool rhs_is_fixed;
+    /** @brief rejection probability on each level */
+    mutable std::vector<double> acceptance_probability;
+    /** @brief number of accept/reject steps on each level */
+    mutable std::vector<unsigned int> n_accept_reject;
 };
 
 #endif // MULTIGRIDMC_SAMPLER_HH

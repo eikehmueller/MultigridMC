@@ -291,6 +291,8 @@ int main(int argc, char *argv[])
                                        "meansquarederror_multigridmc.txt");
             std::cout << std::endl;
         }
+        std::dynamic_pointer_cast<MultigridMCSampler>(multigridmc_sampler)->show_acceptance_probabilities();
+        std::cout << std::endl;
     }
     // print out total timing information
     auto t_finish = std::chrono::system_clock::now();
