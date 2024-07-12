@@ -235,8 +235,6 @@ void MultigridMCSampler::set_rhs(const Eigen::VectorXd &f) const
 double MultigridMCSampler::log_probability(const unsigned int level,
                                            const Eigen::VectorXd &x) const
 {
-    // TODO: construct mu on each level once in the constructor
-
     unsigned int n = x.size();
     Eigen::VectorXd x_mu(n);
     Eigen::VectorXd A_x_mu(n);
