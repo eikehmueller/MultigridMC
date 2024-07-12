@@ -10,7 +10,8 @@ MultigridMCSampler::MultigridMCSampler(std::shared_ptr<LinearOperator> linear_op
                                        const MultigridParameters params_,
                                        const CholeskyParameters cholesky_params_) : Sampler(linear_operator_, rng_),
                                                                                     params(params_),
-                                                                                    cholesky_params(cholesky_params_)
+                                                                                    cholesky_params(cholesky_params_),
+                                                                                    rhs_is_fixed(false)
 {
     // Extract underlying fine lattice
     std::shared_ptr<Lattice> lattice = linear_operator->get_lattice();
@@ -88,6 +89,7 @@ MultigridMCSampler::MultigridMCSampler(std::shared_ptr<LinearOperator> linear_op
         x_ell.push_back(Eigen::VectorXd(lattice->Nvertex));
         f_ell.push_back(Eigen::VectorXd(lattice->Nvertex));
         r_ell.push_back(Eigen::VectorXd(lattice->Nvertex));
+        mu_ell.push_back(Eigen::VectorXd(lattice->Nvertex));
         linear_operators.push_back(lin_op);
         std::shared_ptr<Sampler> presampler = presampler_factory->get(lin_op);
         presamplers.push_back(presampler);
@@ -153,10 +155,10 @@ void MultigridMCSampler::sample(const unsigned int level) const
                 intergrid_operators[level]->prolongate_add(-1.0, x_old_coarse, x_tilde);
                 // Acceptance ratio alpha
                 double log_p = 0;
-                log_p += log_probability(linear_operators[level], f_ell[level], x_tilde);
-                log_p -= log_probability(linear_operators[level], f_ell[level], x_old);
-                log_p += log_probability(linear_operators[level + 1], f_ell[level + 1], x_old_coarse);
-                log_p -= log_probability(linear_operators[level + 1], f_ell[level + 1], x_ell[level + 1]);
+                // fine level
+                log_p += log_probability(level, x_tilde) - log_probability(level, x_old);
+                // coarse level
+                log_p += log_probability(level + 1, x_old_coarse) - log_probability(level + 1, x_ell[level + 1]);
                 double alpha = exp(log_p);
                 double accept = (alpha >= 1.0);
                 if (not accept)
@@ -178,24 +180,49 @@ void MultigridMCSampler::sample(const unsigned int level) const
 /** Solve the linear system Ax = b with one iteration of the multigrid V-cycle */
 void MultigridMCSampler::apply(const Eigen::VectorXd &f, Eigen::VectorXd &x) const
 {
-    f_ell[0] = f;
     x_ell[0] = x;
+    if ((params.variant == "fas") and (not rhs_is_fixed))
+    {
+        set_rhs(f);
+    }
+    else
+    {
+        f_ell[0] = f;
+    }
     sample(0);
     x = x_ell[0];
 }
 
+/** Fix the RHS */
+void MultigridMCSampler::fix_rhs(const Eigen::VectorXd &f)
+{
+    rhs_is_fixed = true;
+    set_rhs(f);
+}
+
+/** Set the RHS for all levels of the hierarchy and compute the corresponding means */
+void MultigridMCSampler::set_rhs(const Eigen::VectorXd &f) const
+{
+    f_ell[0] = f;
+    for (int level = 0; level < params.nlevel; ++level)
+    {
+        CholeskySolver solver(linear_operators[level]);
+        solver.apply(f_ell[level], mu_ell[level]);
+        if (level < params.nlevel - 1)
+            intergrid_operators[level]->restrict(f_ell[level], f_ell[level + 1]);
+    }
+}
+
 /** Compute the logarithm of the probability density, ignoring normalisation */
-double MultigridMCSampler::log_probability(const std::shared_ptr<LinearOperator> linear_operator,
-                                           const Eigen::VectorXd &f_rhs,
+double MultigridMCSampler::log_probability(const unsigned int level,
                                            const Eigen::VectorXd &x) const
 {
     // TODO: construct mu on each level once in the constructor
-    CholeskySolver solver(linear_operator);
+
     unsigned int n = x.size();
-    Eigen::VectorXd mu(n);
+    Eigen::VectorXd x_mu(n);
     Eigen::VectorXd A_x_mu(n);
-    solver.apply(f_rhs, mu);
-    mu -= x;
-    linear_operator->apply(mu, A_x_mu);
-    return -0.5 * A_x_mu.dot(mu);
+    x_mu = x - mu_ell[level];
+    linear_operators[level]->apply(x_mu, A_x_mu);
+    return -0.5 * A_x_mu.dot(x_mu);
 }
