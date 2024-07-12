@@ -151,9 +151,6 @@ void MultigridMCSampler::sample(const unsigned int level) const
                 intergrid_operators[level]->interpolate(x_old, x_old_coarse);
                 intergrid_operators[level]->prolongate_add(1.0, x_ell[level + 1], x_tilde);
                 intergrid_operators[level]->prolongate_add(-1.0, x_old_coarse, x_tilde);
-                // Construct vector
-                //   x_{ell+1}^{old} = 2*tilde(I)_{h}^{2h} x_ell^{old} - x_{ell+1}
-                x_old_coarse = 2 * x_old_coarse - x_ell[level + 1];
                 // Acceptance ratio alpha
                 double log_p = 0;
                 log_p += log_probability(linear_operators[level], f_ell[level], x_tilde);
