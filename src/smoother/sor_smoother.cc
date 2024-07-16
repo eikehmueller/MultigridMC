@@ -22,18 +22,20 @@ SORSmoother::SORSmoother(const std::shared_ptr<LinearOperator> linear_operator_,
         // Construct the matrix 1/omega * D + L + L^T
         LinearOperator::SparseMatrixType D(A_sparse.diagonal().asDiagonal());
         LinearOperator::SparseMatrixType A_sparse_diag_scaled = A_sparse + (1. - omega) / omega * D;
+        LinearOperator::DenseMatrixType dense_B_bar;
         if (direction == forward)
         {
             // Compute bar(B)_{FW} = (L   + 1/omega * D)^{-1} B ( Sigma + B^T (L   + 1/omega * D)^{-1} B )^{-1}
             LinearOperator::DenseMatrixType LD_inv_B = A_sparse_diag_scaled.triangularView<Eigen::Lower>().solve(B.toDense());
-            B_bar = std::make_shared<LinearOperator::DenseMatrixType>(LD_inv_B * (Sigma + B.transpose() * LD_inv_B).inverse());
+            dense_B_bar = LD_inv_B * (Sigma + B.transpose() * LD_inv_B).inverse();
         }
         else
         {
             // Compute bar(B)_{BW} = (L^T + 1/omega * D)^{-1} B ( Sigma + B^T (L^T + 1/omega * D)^{-1} B )^{-1}
             LinearOperator::DenseMatrixType LTD_inv_B = A_sparse_diag_scaled.triangularView<Eigen::Upper>().solve(B.toDense());
-            B_bar = std::make_shared<LinearOperator::DenseMatrixType>(LTD_inv_B * (Sigma + B.transpose() * LTD_inv_B).inverse());
+            dense_B_bar = LTD_inv_B * (Sigma + B.transpose() * LTD_inv_B).inverse();
         }
+        B_bar = std::make_shared<LinearOperator::SparseMatrixType>(dense_B_bar.sparseView());
     }
 };
 

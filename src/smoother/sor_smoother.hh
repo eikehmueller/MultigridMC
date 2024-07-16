@@ -82,7 +82,7 @@ protected:
     /** @brief the matrix B that arises in the low-rank update of the linear operator */
     LinearOperator::SparseMatrixType B;
     /** @brief the matrix bar(B)_{FW} or bar(B)_{BW} used on the forward/backward sweeps */
-    std::shared_ptr<LinearOperator::DenseMatrixType> B_bar;
+    std::shared_ptr<LinearOperator::SparseMatrixType> B_bar;
 };
 
 /* ******************** factory classes ****************************** */
