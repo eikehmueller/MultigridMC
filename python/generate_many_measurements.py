@@ -38,12 +38,21 @@ parser.add_argument(
     help="measurement error",
 )
 
+parser.add_argument(
+    "--missing_data",
+    action="store_true",
+    default=False,
+    help="omit data in the centre",
+)
+
+
 args = parser.parse_args()
 
 print(f"Creating measurements file {args.filename}")
 print()
 print(f" n = {args.nmeas}")
 print(f" epsilon = {args.epsilon}")
+print(f" missing data = {args.missing_data}")
 
 rng = np.random.default_rng(seed=2718417)
 
@@ -90,7 +99,18 @@ ax.set_aspect("equal")
 ax.set_xlim(0, 1)
 ax.set_ylim(0, 1)
 
-points = rng.uniform(size=(args.nmeas + 1, 2), low=0, high=1)
+if args.missing_data:
+    points = np.empty((args.nmeas + 1, 2))
+    radius = 0.25
+    x0, y0 = 0.45, 0.35
+    j = 0
+    while j < args.nmeas + 1:
+        p = rng.uniform(size=2, low=0, high=1)
+        if (p[0] - x0) ** 2 + (p[1] - y0) ** 2 > radius**2:
+            points[j, :] = p
+            j += 1
+else:
+    points = rng.uniform(size=(args.nmeas + 1, 2), low=0, high=1)
 mean = np.asarray([average(x, y) for x, y in points])
 
 # find the point closest to the centre of the domain
