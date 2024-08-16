@@ -102,7 +102,7 @@ ax.set_ylim(0, 1)
 if args.missing_data:
     points = np.empty((args.nmeas + 1, 2))
     radius = 0.25
-    x0, y0 = 0.45, 0.35
+    x0, y0 = 0.5, 0.5
     j = 0
     while j < args.nmeas + 1:
         p = rng.uniform(size=2, low=0, high=1)
