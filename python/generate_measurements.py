@@ -95,6 +95,14 @@ def variance(n, sigma_low, sigma_high):
     return Sigma_diag
 
 
+def format_array(a):
+    """Convert an array to a form that can be printed
+
+    :arg a: array to convert
+    """
+    return "[" + ", ".join([f"{x:.16f}" for x in list(a)]) + "]"
+
+
 nmeas = 8
 dim = 2
 dmin = 0.2
@@ -128,10 +136,10 @@ Sigma_diag = variance(args.nmeas, 1.0, 2.0)
 # Print results in a format that can be used in the configuration file
 print("dim = ", args.dim, ";")
 print("n = ", args.nmeas, ";")
-print("measurement_locations = ", repr(list(p[:-1, :].flatten())), ";")
-print("sample_location = ", repr(list(p[-1, :].flatten())), ";")
-print("mean = ", repr(list(mean.flatten())), ";")
-print("variance = ", repr(list(Sigma_diag.flatten())), ";")
+print("measurement_locations = ", format_array(p[:-1, :].flatten()), ";")
+print("sample_location = ", format_array(p[-1, :].flatten()), ";")
+print("mean = ", format_array(mean.flatten()), ";")
+print("variance = ", format_array(Sigma_diag.flatten()), ";")
 
 plt.clf()
 fig = plt.figure()
