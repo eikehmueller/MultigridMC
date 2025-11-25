@@ -21,6 +21,10 @@
 /** @class MultigridMCSampler
  *
  * @brief Sampler based on Multigrid Monte Carlo
+ *
+ * Goodman, J. and Sokal, A.D., 1989.
+ * Multigrid Monte Carlo Method. Conceptual Foundations.
+ * Physical Review D, 40(6), p.2035.
  */
 class MultigridMCSampler : public Sampler
 {
