@@ -2,6 +2,14 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy import special as sp
 
+"""
+Tests for pivoted Cholesky factorisation in
+
+     Harbrecht, H., Peters, M. and Schneider, R., 2012:
+     On the low-rank approximation by the pivoted Cholesky decomposition
+     Applied numerical mathematics, 62(4), pp.428-440
+"""
+
 
 def create_1d_matrix(Lambda, n):
     """Construct 1d discretisation of the following linear operator:
