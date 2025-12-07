@@ -19,7 +19,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
-    -name: Install BLAS
+    - name: Install BLAS
       run: sudo apt-get install -y libblas-dev liblapack-dev
 
     - name: Download Eigen
