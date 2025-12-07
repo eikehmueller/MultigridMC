@@ -26,9 +26,13 @@ jobs:
       working-directory: ${{github.workspace}}/eigen
       run: cmake -B ${{github.workspace}}/eigen/build -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/eigen/build 
 
+    - name: Build Eigen
+      working-directory: ${{github.workspace}}/eigen/build
+      run: cmake ..
+
     - name: Install Eigen
-      working-directory: ${{github.workspace}}/eigen
-      run: cmake --install build
+      working-directory: ${{github.workspace}}/eigen/build
+      run: make install
 
     - name: Download libconfig
       run: git clone https://github.com/hyperrealm/libconfig.git; cd libconfig
