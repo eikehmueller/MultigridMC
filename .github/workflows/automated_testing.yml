@@ -28,11 +28,11 @@ jobs:
 
     - name: Build BLAS
       working-directory: ${{github.workspace}}/eigen
-      run: make blas
+      run: cmake --blas
 
     - name: Build Lapack
       working-directory: ${{github.workspace}}/eigen
-      run: make lapack
+      run: cmake --lapack
 
     - name: Install Eigen
       working-directory: ${{github.workspace}}/eigen
