@@ -2,7 +2,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 # Multigrid Monte Carlo
-Implementation of the **Multigrid Monte Carlo (MGMC)** algorithm, a computational technique for sampling from complex probability distributions that arise in high‑dimensional spatial statistics. The code provides a C++ implementation of MGMC alongside alternative classical sampling strategies, supporting experimentation with efficient posterior inference in large scale spatial statistics.
+Implementation of the **Multigrid Monte Carlo (MGMC)** algorithm by Goodman and Sokal, a computational technique for sampling from complex probability distributions that arise in high‑dimensional spatial statistics. The code provides a C++ implementation of MGMC alongside alternative classical sampling strategies, supporting experimentation with efficient posterior inference in large scale spatial statistics.
 
 ## Goals
 Many classical samplers (Gibbs, Cholesky) for high-dimensional probability distributions suffer from serious drawbacks:
