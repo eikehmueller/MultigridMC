@@ -2,7 +2,40 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 # Multigrid Monte Carlo
-C++ implementation of multigrid Monte Carlo (MGMC) algorithm. In addition to MGMC, the code also implements sampling based on different Cholesky factorisations as an alternative algorithm.
+Implementation of the **Multigrid Monte Carlo (MGMC)** algorithm, a computational technique for sampling from complex probability distributions that arise in high‑dimensional spatial statistics. The code provides a C++ implementation of MGMC alongside alternative classical sampling strategies, supporting experimentation with efficient posterior inference in large scale spatial statistics.
+
+## Goals
+Many classical samplers (Gibbs, Cholesky) for high-dimensional probability distributions suffer from serious drawbacks:
+
+- Large autocorrelation times prevent generation of independent samples
+- Parallelisation on distributed memory machines can be difficult for Cholesky samplers 
+- Incorporation of measurements in a Bayesian setting can be challenging.
+
+Multigrid Monte Carlo combines ideas from **multigrid methods**—a class of efficient solvers for large numerical problems—and **Monte Carlo sampling**, a probabilistic approach widely used for exploring high‑dimensional probability distributions. By leveraging multiple scales of computation (coarse to fine), MGMC can significantly reduce the computational cost of sampling in settings where standard methods become expensive. An additional innovation of this project is the support for sampling from posterior distributions.
+
+## Features
+
+- Offers a flexible implementation of MGMC and related samplers
+- Allows sampling from posterior distributions conditioned on measurements
+- Corresponding multigrid solvers can be run alongside samplers to compare convergence properties
+- Partial OpenMP acceleration for faster sampling
+- Supports configurable experiments with different solvers and sampling approaches  
+- Enables comparison of performance and statistical behaviour
+
+## Installation
+To compile in the subdirectory `build` run
+
+```
+cmake -B build
+```
+
+to configure, followed by
+
+```
+cmake --build build
+```
+
+to build the code.
 
 ## Dependencies
 The code requires the [Eigen library](https://eigen.tuxfamily.org/index.php?title=Main_Page) for linear algebra as well as [libconfig](https://hyperrealm.github.io/libconfig/) for parsing configuration files. To install libconfig, clone the [libconfig repository](https://github.com/hyperrealm/libconfig) and build/install it with CMake.
@@ -10,21 +43,6 @@ The code requires the [Eigen library](https://eigen.tuxfamily.org/index.php?titl
 If possible, Eigen will use [BLAS/LAPACK support](https://eigen.tuxfamily.org/dox/TopicUsingBlasLapack.html) for dense linear algebra, but it will fall back to the non-BLAS/LAPACK version if these libraries are not installed.
 
 CholMod is an optional dependency, if it is not found the code falls back to using the Simplicial Cholesky factorisation in Eigen, which is not necessarily slower. Cholmod is available as part of [SuiteSparse](https://people.engr.tamu.edu/davis/suitesparse.html). To prevent the use of CholMod even if it has been installed, set the `USE_CHOLMOD` flag to `Off` during the CMake configure stage.
-
-## Building the code
-To compile, create a new directory called `build`. Change to this directory and run
-
-```
-cmake ..
-```
-
-to configure, followed by
-
-```
-make
-```
-
-to build the code.
 
 ## Testing the code
 To run the unit tests, use
