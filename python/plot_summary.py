@@ -99,6 +99,27 @@ ax.set_title("Sampling efficiency")
 # -----------------------------
 # LEFT annotations (data-space, improved placement)
 # -----------------------------
+ax.annotate(
+    "",
+    xy=(1.2 * n[0], 10),
+    xytext=(0, -100),  # offset in points
+    textcoords="offset points",
+    arrowprops=dict(arrowstyle="->", lw=3, color="black", mutation_scale=30),
+    ha="right",
+    va="center",
+    fontsize=14,
+)
+
+ax.text(
+    1.3 * n[0],
+    4,
+    r"worse",
+    color="black",
+    fontsize=28,
+    rotation=90,
+    bbox=dict(facecolor="white", alpha=0.8, edgecolor="none"),
+)
+
 ax.text(
     4e4,
     6.8,
@@ -125,6 +146,27 @@ ax.legend(frameon=True)
 # RIGHT: Computational cost
 # =========================================================
 ax = axes[1]
+
+ax.annotate(
+    "",
+    xy=(1.2 * n[0], 100),
+    xytext=(0, -100),  # offset in points
+    textcoords="offset points",
+    arrowprops=dict(arrowstyle="<-", lw=3, color="black", mutation_scale=30),
+    ha="right",
+    va="center",
+    fontsize=14,
+)
+
+ax.text(
+    1.4 * n[0],
+    20,
+    r"better",
+    color="black",
+    fontsize=28,
+    rotation=90,
+    bbox=dict(facecolor="white", alpha=0.8, edgecolor="none"),
+)
 
 ax.plot(
     n,
