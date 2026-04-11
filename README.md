@@ -15,7 +15,7 @@ Multigrid Monte Carlo combines ideas from **multigrid methods**—a class of eff
 
 ## Key achievements
 
-Compared to a Gibbs sampler, **our MGMC sampler significantly reduces sampling efficiency**: the integrated autocorrelation time is close to 1, which corresponds to nearly independent samples (left figure). As far as overall performance is concerned: for large problem sizes, **our MGMC sampler can produce approximately independent samples 3$\times$ faster** than the widely used Cholesky reference method (right figure). 
+Compared to a Gibbs sampler, **our MGMC sampler significantly reduces sampling efficiency**: the integrated autocorrelation time is close to 1, which corresponds to nearly independent samples (left figure). As far as overall performance is concerned: for large problem sizes, **our MGMC sampler can produce approximately independent samples 3 times faster** than the widely used Cholesky reference method (right figure). 
 
 ![sampling efficiency and performance](figures/summary.png)
 
