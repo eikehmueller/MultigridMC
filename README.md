@@ -13,9 +13,17 @@ Many classical samplers (Gibbs, Cholesky) for high-dimensional probability distr
 
 Multigrid Monte Carlo combines ideas from **multigrid methods**—a class of efficient solvers for large numerical problems—and **Monte Carlo sampling**, a probabilistic approach widely used for exploring high‑dimensional probability distributions. By leveraging multiple scales of computation (coarse to fine), MGMC can significantly reduce the computational cost of sampling in settings where standard methods become expensive. An additional innovation of this project is the support for sampling from posterior distributions.
 
+## Key achievements
+
+Compared to a Gibbs sampler, **our MGMC sampler significantly reduces sampling efficiency**: the integrated autocorrelation time is close to 1, which corresponds to nearly independent samples (left figure). As far as overall performance is concerned: for large problem sizes, **our MGMC sampler can produce approximately independent samples 3$\times$ faster** than the widely used Cholesky reference method (right figure). 
+
+![sampling efficiency and performance](figures/summary.png)
+
+Performance of different samplers for a shifted Laplace prior in three dimensions, the posterior is conditioned on local measurements. Figure generated from data in [our paper](https://arxiv.org/pdf/2407.12149) with assistance from ChatGPT (OpenAI GPT-5.3-mini) and checked for correctness.
+
 ## Features
 
-- Offers a flexible implementation of MGMC and related samplers
+- Offers a flexible implementation of MGMC and related reference samplers as a modular, object oriented C++ code
 - Allows sampling from posterior distributions conditioned on measurements
 - Corresponding multigrid solvers can be run alongside samplers to compare convergence properties
 - Partial OpenMP acceleration for faster sampling
