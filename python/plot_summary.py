@@ -172,6 +172,27 @@ ax.set_title("Computational cost")
 # -----------------------------
 # RIGHT annotations (data-space, consistent placement)
 # -----------------------------
+ax.annotate(
+    "",
+    xy=(n[-1], 1.1 * t_mgmc[-1]),
+    xytext=(0, 40),  # offset in points
+    textcoords="offset points",
+    arrowprops=dict(arrowstyle="->", lw=6, color="red", mutation_scale=25),
+    ha="right",
+    va="center",
+    fontsize=14,
+)
+
+ax.text(
+    1.2 * n[-1],
+    0.8 * np.sqrt(t_mgmc[-1] * t_chol[-1]),
+    r"3x",
+    color="red",
+    fontsize=36,
+    fontweight="bold",
+    bbox=dict(facecolor="white", alpha=0.8, edgecolor="none"),
+)
+
 ax.text(
     4e4,
     100,
